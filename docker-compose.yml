@@ -1,0 +1,13 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/app/src
+    environment:
+      - KASA_USERNAME=${KASA_USERNAME}
+      - KASA_PASSWORD=${KASA_PASSWORD}
+      - PRINTER_ALIAS=${PRINTER_ALIAS}
+      - FAN_ALIAS=${FAN_ALIAS}
