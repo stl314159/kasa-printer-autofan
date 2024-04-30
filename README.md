@@ -21,9 +21,10 @@ KASA_USERNAME=your_kasa_username
 KASA_PASSWORD=your_kasa_password
 PRINTER_ALIAS=your_printer_alias
 FAN_ALIAS=your_fan_alias
+POWER_THRESHOLD=your_power_threshold
 ```
 
-Replace `your_kasa_username`, `your_kasa_password`, `your_printer_alias`, and `your_fan_alias` with your actual values.
+Replace `your_kasa_username`, `your_kasa_password`, `your_printer_alias`, `your_fan_alias`, and `your_power_threshold` with your actual values.
 
 ## Usage
 
@@ -31,8 +32,8 @@ Replace `your_kasa_username`, `your_kasa_password`, `your_printer_alias`, and `y
 `docker-compose up --build` This command will build the Docker image and start the container.
 
 2. The application will continuously monitor the power consumption of the printer smart plug and control the fan smart plug based on the following logic:
-- If the printer's power consumption is over 10W, the fan will be turned on.
-- If the printer's power consumption has been less than 10W for at least 5 minutes, the fan will be turned off.
+- If the printer's power consumption is over the power threshold, the fan will be turned on.
+- If the printer's power consumption has been less than the power threshold for at least 5 minutes, the fan will be turned off.
 
 3. To stop the application, press `Ctrl+C` in the terminal where the containers are running, or run the following command in a separate terminal: `docker-compose down` This will stop and remove the containers.
 
@@ -41,7 +42,7 @@ Replace `your_kasa_username`, `your_kasa_password`, `your_printer_alias`, and `y
 - `Dockerfile`: Defines the multi-stage build process for the Docker image.
 - `docker-compose.yml`: Defines the services and their configuration for Docker Compose.
 - `requirements.txt`: Lists the Python dependencies required for the project.
-- `src/app.py`: Contains the main Python script that monitors the printer's power consumption and controls the fan.
+- `src/app.sh`: Contains the main shell script that monitors the printer's power consumption and controls the fan.
 - `.env`: Stores the environment variables required for the project (not version-controlled).
 
 ## Dependencies
