@@ -1,0 +1,7 @@
+name: kasa
+
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+    - -r src/requirements.txt

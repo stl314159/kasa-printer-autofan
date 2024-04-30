@@ -1,6 +1,9 @@
 # Use an official Rust runtime as the base image for the build stage
 FROM rust:latest as builder
 
+# Set default rust compiler
+RUN rustup default stable
+
 # Create a dummy project and build it to cache the Rust dependencies
 RUN cargo new --bin dummy
 WORKDIR /dummy
@@ -26,14 +29,11 @@ COPY ./src/requirements.txt .
 # Upgrade pip
 RUN pip install --upgrade pip
 
-# Set default rust compiler
-RUN rustup default stable
-
 # Install the package specified in requirements.txt
 RUN pip install -r requirements.txt
 
 # Copy the Python script to the working directory
-COPY src/app.py .
+COPY src/app.sh .
 
 # Run the Python script when the container starts
-CMD ["python", "app.py"]
+CMD ["python", "app.sh"]
