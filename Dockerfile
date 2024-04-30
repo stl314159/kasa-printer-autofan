@@ -23,6 +23,11 @@ COPY --from=builder /usr/local/rustup /usr/local/rustup
 # Update PATH to include Rust binaries
 ENV PATH="/usr/local/cargo/bin:${PATH}"
 
+# apt install dependencies
+RUN apt-get update && apt-get install -y \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the requirements.txt file to the working directory
 COPY ./src/requirements.txt .
 
@@ -36,4 +41,4 @@ RUN pip install -r requirements.txt
 COPY src/app.sh .
 
 # Run the Python script when the container starts
-CMD ["python", "app.sh"]
+CMD ["./app.sh"]
