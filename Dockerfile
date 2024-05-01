@@ -42,4 +42,4 @@ RUN pip install -r requirements.txt
 COPY src/app.sh .
 
 # Run the Python script when the container starts
-CMD ["./app.sh"]
+CMD ["/app/app.sh"]

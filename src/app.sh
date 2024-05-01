@@ -12,7 +12,7 @@ PRINTER_ALIAS=${PRINTER_ALIAS}
 FAN_ALIAS=${FAN_ALIAS}
 POWER_THRESHOLD=${POWER_THRESHOLD}
 
-# Set timer for 5 minutes
+# Set timer for 5 minutes (in seconds)
 TIMER=300
 ITERATION_TIME=10
 
@@ -58,6 +58,9 @@ if [[ -z "$PRINTER_IP" || -z "$FAN_IP" ]]; then
   exit 1
 fi
 
+LAST_POWER_LEVEL_TIME=$(date +%s)
+POWER_BELOW_THRESHOLD_TIME=0
+
 while true; do
   # Query the emeter level of the printer device
   EMETER_DATA=$(kasa --username $KASA_USERNAME --password $KASA_PASSWORD --host $PRINTER_IP --json emeter)
@@ -78,11 +81,18 @@ while true; do
       echo "Power level exceeded threshold. Turning on the fan."
     fi
     POWER_BELOW_THRESHOLD_TIME=0
+    LAST_POWER_LEVEL_TIME=$(date +%s)
   else
-    # Check if the power level has been below the threshold for at least 5 minutes
-    POWER_BELOW_THRESHOLD_TIME=$((POWER_BELOW_THRESHOLD_TIME + ITERATION_TIME))
+    # Calculate the elapsed time since the last power level check
+    CURRENT_TIME=$(date +%s)
+    ELAPSED_TIME=$((CURRENT_TIME - LAST_POWER_LEVEL_TIME))
+    POWER_BELOW_THRESHOLD_TIME=$((POWER_BELOW_THRESHOLD_TIME + ELAPSED_TIME))
+    LAST_POWER_LEVEL_TIME=$CURRENT_TIME
+
     # Debug: Print the current duration below the threshold
     echo "Power level below threshold for $POWER_BELOW_THRESHOLD_TIME seconds."
+
+    # Check if the power level has been below the threshold for at least 5 minutes
     if (( POWER_BELOW_THRESHOLD_TIME >= TIMER )); then
       # Check the current fan state
       FAN_STATE=$(kasa --username $KASA_USERNAME --password $KASA_PASSWORD --host $FAN_IP --json sysinfo | jq -r '.device_on')
@@ -97,8 +107,6 @@ while true; do
     fi
   fi
 
-  LAST_POWER_LEVEL=$POWER_MW
-
-  # Sleep for 1 second before checking again
+  # Sleep for ITERATION_TIME seconds before checking again
   sleep $ITERATION_TIME
 done
