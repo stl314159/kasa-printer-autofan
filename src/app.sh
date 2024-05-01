@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# Load environment variables from .env
-# source .env
+# Load environment variables from .env if the file exists
+if [[ -f .env ]]; then
+  source .env
+fi
 
 # Load environment variables from .env file
 KASA_USERNAME=${KASA_USERNAME}
@@ -12,6 +14,7 @@ POWER_THRESHOLD=${POWER_THRESHOLD}
 
 # Set timer for 5 minutes
 TIMER=300
+ITERATION_TIME=10
 
 # Perform discovery
 DEVICES=$(kasa --username $KASA_USERNAME --password $KASA_PASSWORD --json discover)
@@ -19,19 +22,15 @@ DEVICES=$(kasa --username $KASA_USERNAME --password $KASA_PASSWORD --json discov
 # Extract IP addresses and nicknames from devices
 declare -a device_info
 for ip in $(jq -r 'keys[]' <<< "$DEVICES"); do
-  nickname_b64=$(jq -r ".\"$ip\".get_device_info.nickname" <<< "$DEVICES")
+  nickname_b64=$(jq -r ".\"$ip\".info.nickname" <<< "$DEVICES")
   nickname=$(echo "$nickname_b64" | base64 --decode)
-  type=$(jq -r ".\"$ip\".get_device_info.type" <<< "$DEVICES")
+  type=$(jq -r ".\"$ip\".info.type" <<< "$DEVICES")
   device_info+=("${ip}|${nickname}|${type}")
 done
 
 # Print extracted device info
 echo "Extracted Device Info:"
 echo "${device_info[@]}"
-
-# Debug: Print the values of PRINTER_ALIAS and FAN_ALIAS
-echo "PRINTER_ALIAS: $PRINTER_ALIAS"
-echo "FAN_ALIAS: $FAN_ALIAS"
 
 # Find the IP and type of the device with the nickname matching PRINTER_ALIAS
 PRINTER_IP=""
@@ -42,10 +41,10 @@ for device in "${device_info[@]}"; do
   IFS='|' read -r ip nickname type <<< "$device"
   # Debug: Print the current device being checked
   echo "Checking device: $nickname"
-  if [[ "$nickname" == "$PRINTER_ALIAS" ]]; then
+  if [[ "${PRINTER_ALIAS//\"/}" == "$nickname" ]]; then
     PRINTER_IP="$ip"
     PRINTER_TYPE="$type"
-  elif [[ "$nickname" == "$FAN_ALIAS" ]]; then
+  elif [[ "${FAN_ALIAS//\"/}" == "$nickname" ]]; then
     FAN_IP="$ip"
     FAN_TYPE="$type"
     # Initialize fan state to the current state
@@ -81,7 +80,7 @@ while true; do
     POWER_BELOW_THRESHOLD_TIME=0
   else
     # Check if the power level has been below the threshold for at least 5 minutes
-    POWER_BELOW_THRESHOLD_TIME=$((POWER_BELOW_THRESHOLD_TIME + 1))
+    POWER_BELOW_THRESHOLD_TIME=$((POWER_BELOW_THRESHOLD_TIME + ITERATION_TIME))
     # Debug: Print the current duration below the threshold
     echo "Power level below threshold for $POWER_BELOW_THRESHOLD_TIME seconds."
     if (( POWER_BELOW_THRESHOLD_TIME >= TIMER )); then
@@ -101,5 +100,5 @@ while true; do
   LAST_POWER_LEVEL=$POWER_MW
 
   # Sleep for 1 second before checking again
-  sleep 1
+  sleep $ITERATION_TIME
 done

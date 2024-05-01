@@ -26,6 +26,7 @@ ENV PATH="/usr/local/cargo/bin:${PATH}"
 # apt install dependencies
 RUN apt-get update && apt-get install -y \
     jq \
+    bc \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements.txt file to the working directory
